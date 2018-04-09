@@ -1,7 +1,7 @@
 ### Bookrest - The easiest way to add rest API to an arbitrary DB
 
 
-![bookrest image](bookrest.jpg)
+![bookrest image](assets/bookrest.jpg)
 
 Bookrest allows you to add an API (and browsable htmls) to arbitrary databases -- well almost arbitrary, the tables must have PKs.
 The databases do not need to be managed by Django.
@@ -51,11 +51,11 @@ urlpatterns = [
 
 🚀 Boom! You are in business. All your tables will have a full read/write API
 
-![bookrest image](bookrest.gif)
+![bookrest image](assets/bookrest.gif)
 
 ### Todo
 
-- [X] Test with SQL
+- [X] Test with Sqlite
 - [ ] Publish on Pypi
 - [ ] Test with Postgres
 - [ ] Test with Mysql
