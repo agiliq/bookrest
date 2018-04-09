@@ -9,56 +9,60 @@ import re
 import functools
 
 
-BOOKREST_DB_NAME = 'bookrest'
+BOOKREST_DB_NAME = "bookrest"
 
 
 def get_viewsets():
     models = ConnectionToModels(connections[BOOKREST_DB_NAME]).get_models()
     viewsets = ModelToDrf(models).get_viewsets()
-    return zip(
-        [model._meta.db_table for model in models], viewsets
-    )
+    return zip([model._meta.db_table for model in models], viewsets)
 
 
 class ModelToDrf:
+
     def __init__(self, models):
         self.models = models
 
     def get_viewsets(self):
         serializers = self.get_serializers()
         serializers_with_models = zip(self.models, serializers)
-        return [self.get_viewset(model_class, serializer_class)
-            for model_class, serializer_class
-            in serializers_with_models]
+        return [
+            self.get_viewset(model_class, serializer_class)
+            for model_class, serializer_class in serializers_with_models
+        ]
 
     def get_serializers(self):
-        return [self.get_serializer(model_class)
-            for model_class in self.models]
-
+        return [self.get_serializer(model_class) for model_class in self.models]
 
     @staticmethod
     def get_viewset(model_class, serializer_klass):
-        searchable_field_name = [field.name for field in model_class._meta.get_fields()
-                if ModelToDrf.is_textual_field(field)]
+        searchable_field_name = [
+            field.name
+            for field in model_class._meta.get_fields()
+            if ModelToDrf.is_textual_field(field)
+        ]
+
         class ViewSet(viewsets.ModelViewSet):
             serializer_class = serializer_klass
             queryset = model_class.objects.all()
             filter_backends = (SearchFilter,)
             search_fields = searchable_field_name
-        return  type('{}ViewSet'.format(model_class._meta), (ViewSet,), {})
 
+        return type("{}ViewSet".format(model_class._meta), (ViewSet,), {})
 
     @staticmethod
     def is_textual_field(field):
         return isinstance(field, models.TextField)
 
-
     @staticmethod
     def get_serializer(model_class):
+
         class Serializer(serializers.ModelSerializer):
+
             class Meta:
                 model = model_class
-                fields = '__all__'
+                fields = "__all__"
+
         return Serializer
 
 
@@ -78,25 +82,27 @@ class ConnectionToModels:
         tables = self.get_tables()
         return [self.get_model(table.name) for table in tables]
 
-
     def get_model(self, table_name):
+
         class Meta:
             managed = False
             db_table = table_name
 
         table_fields = self.get_fields(table_name)
-        model_fields = [self.get_field(table_name, field_info)
-            for field_info in table_fields]
+        model_fields = [
+            self.get_field(table_name, field_info) for field_info in table_fields
+        ]
         attrs = dict(model_fields)
 
         class BookRestQueryset(query.QuerySet):
+
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
                 self._db = BOOKREST_DB_NAME
 
-        attrs['__module__'] = 'bookrest.models'
-        attrs ['Meta'] = Meta
-        attrs['objects'] = BookRestQueryset.as_manager()
+        attrs["__module__"] = "bookrest.models"
+        attrs["Meta"] = Meta
+        attrs["objects"] = BookRestQueryset.as_manager()
         Model = type(self.table2model(table_name), (models.Model,), attrs)
         return Model
 
@@ -108,15 +114,16 @@ class ConnectionToModels:
             table_info = self.connection.introspection.get_table_list(cursor)
         return table_info
 
-
     @functools.lru_cache(maxsize=32)
     def get_fields(self, table_name):
         """
         get a list of fields in a table
         """
         with self.connection.cursor() as cursor:
-            all_fields = self.connection.introspection.get_table_description(cursor, table_name)
-            return [field for field in all_fields if not field.name=='id']
+            all_fields = self.connection.introspection.get_table_description(
+                cursor, table_name
+            )
+            return [field for field in all_fields if not field.name == "id"]
 
     def get_field(self, table_name, field_info):
         """
@@ -128,13 +135,17 @@ class ConnectionToModels:
         field_notes = []
 
         with self.connection.cursor() as cursor:
-            primary_key_column = self.connection.introspection.get_primary_key_column(cursor, table_name)
+            primary_key_column = self.connection.introspection.get_primary_key_column(
+                cursor, table_name
+            )
 
         try:
-            field_type = self.connection.introspection.get_field_type(field_info[1], field_info)
+            field_type = self.connection.introspection.get_field_type(
+                field_info[1], field_info
+            )
         except KeyError:
-            field_type = 'TextField'
-            field_notes.append('This field type is a guess.')
+            field_type = "TextField"
+            field_notes.append("This field type is a guess.")
 
         # This is a hook for data_types_reverse to return a tuple of
         # (field_type, field_params_dict).
@@ -143,24 +154,28 @@ class ConnectionToModels:
             field_params.update(new_params)
 
         # Add max_length for all CharFields.
-        if field_type == 'CharField' and field_info[3]:
-            field_params['max_length'] = int(field_info[3])
+        if field_type == "CharField" and field_info[3]:
+            field_params["max_length"] = int(field_info[3])
 
-        if field_type == 'DecimalField':
+        if field_type == "DecimalField":
             if field_info[4] is None or field_info[5] is None:
                 field_notes.append(
-                    'max_digits and decimal_places have been guessed, as this '
-                    'database handles decimal fields as float')
-                field_params['max_digits'] = field_info[4] if field_info[4] is not None else 10
-                field_params['decimal_places'] = field_info[5] if field_info[5] is not None else 5
+                    "max_digits and decimal_places have been guessed, as this "
+                    "database handles decimal fields as float"
+                )
+                field_params["max_digits"] = field_info[4] if field_info[
+                    4
+                ] is not None else 10
+                field_params["decimal_places"] = field_info[5] if field_info[
+                    5
+                ] is not None else 5
             else:
-                field_params['max_digits'] = field_info[4]
-                field_params['decimal_places'] = field_info[5]
-        if field_info.name==primary_key_column:
-            field_params['primary_key'] = True
+                field_params["max_digits"] = field_info[4]
+                field_params["decimal_places"] = field_info[5]
+        if field_info.name == primary_key_column:
+            field_params["primary_key"] = True
         return field_info.name, getattr(models, field_type)(**field_params)
 
     @staticmethod
     def table2model(table_name):
-        return re.sub(r'[^a-zA-Z0-9]', '', table_name.title())
-
+        return re.sub(r"[^a-zA-Z0-9]", "", table_name.title())
