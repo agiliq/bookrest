@@ -18,6 +18,7 @@ class BookrestApiListView(APIView):
         models = ConnectionToModels(connections[BOOKREST_DB_NAME]).get_models()
         table_names = [
             {'name': model._meta.db_table,
+             'objects_count': model.objects.count(),
              'url': reverse('{}-list'.format(model._meta.model_name), request=request)
             }
             for model in models]
