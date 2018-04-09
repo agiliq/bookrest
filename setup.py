@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-version = "0.1.3"
+version = "0.1.4"
 
 setup(
     name='bookrest',
@@ -12,4 +12,5 @@ setup(
     description='The easiest way to add a Django and DRF powered API to any project',
     long_description_content_type="text/markdown",
     packages=find_packages(exclude=['example']),
+    install_requires=['django>=2.0.0', 'djangorestframework>=3.8.0'],
 )
