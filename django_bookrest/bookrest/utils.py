@@ -1,21 +1,40 @@
 from django.db import connections, models
 
-from rest_framework import serializers
+from rest_framework import serializers, viewsets
 
 from collections import OrderedDict
 import re
 
 
-class ModelToSerializer:
+BOOKREST_DB_NAME = 'bookrest'
+
+
+class ModelToDrf:
     def __init__(self, models):
         self.models = models
+
+    def get_viewsets(self):
+        serializers = self.get_serializers()
+        serializers_with_models = zip(self.models, serializers)
+        return [self.get_viewset(model_class, serializer_class)
+            for model_class, serializer_class
+            in serializers_with_models]
 
     def get_serializers(self):
         return [self.get_serializer(model_class)
             for model_class in self.models]
 
 
-    def get_serializer(self, model_class):
+    @staticmethod
+    def get_viewset(model_class, serializer_klass):
+        class ViewSet(viewsets.ReadOnlyModelViewSet):
+            serializer_class = serializer_klass
+            queryset = model_class.objects.using(BOOKREST_DB_NAME).all()
+
+        return ViewSet
+
+    @staticmethod
+    def get_serializer(model_class):
         class Serializer(serializers.ModelSerializer):
             class Meta:
                 model = model_class
