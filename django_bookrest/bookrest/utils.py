@@ -1,6 +1,8 @@
 from django.db import connections, models
 
 from collections import OrderedDict
+import re
+
 
 class ConnectionToModels:
     """
@@ -11,13 +13,26 @@ class ConnectionToModels:
     def __init__(self, connection):
         self.connection = connection
 
+    def get_models(self):
+        """
+        Get all models in the given connection
+        """
+        tables = self.get_tables()
+        return [self.get_model(table.name) for table in tables]
+
+
     def get_model(self, table_name):
+        class Meta:
+            managed = False
+            db_table = table_name
+
         table_fields = self.get_fields(table_name)
         model_fields = [self.get_field(table_name, field_info)
             for field_info in table_fields]
         attrs = dict(model_fields)
         attrs['__module__'] = 'bookrest.models'
-        Model = type(table_name.upper(), (models.Model,), attrs)
+        attrs ['Meta'] = Meta
+        Model = type(self.table2model(table_name), (models.Model,), attrs)
         return Model
 
     def get_tables(self):
@@ -71,4 +86,8 @@ class ConnectionToModels:
                 field_params['max_digits'] = field_info[4]
                 field_params['decimal_places'] = field_info[5]
         return field_info.name, getattr(models, field_type)(**field_params)
+
+    @staticmethod
+    def table2model(table_name):
+        return re.sub(r'[^a-zA-Z0-9]', '', table_name.title())
 
