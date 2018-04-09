@@ -17,6 +17,7 @@ class ConnectionToModels:
     def __init__(self, connection):
         self.connection = connection
 
+    @functools.lru_cache(maxsize=32)
     def get_models(self):
         """
         Get all models in the given connection

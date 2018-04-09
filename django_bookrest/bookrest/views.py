@@ -1,10 +1,27 @@
 from rest_framework import serializers, viewsets
 from rest_framework.filters import SearchFilter
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
 
 from .introspect import ConnectionToModels
 from django.db import connections, models
 
 BOOKREST_DB_NAME = "bookrest"
+
+class BookrestApiListView(APIView):
+    """
+    Lists all the APIs which Bookrest will enable
+    """
+
+    def get(self, request, format=None):
+        models = ConnectionToModels(connections[BOOKREST_DB_NAME]).get_models()
+        table_names = [
+            {'name': model._meta.db_table,
+             'url': reverse('{}-list'.format(model._meta.model_name), request=request)
+            }
+            for model in models]
+        return Response(table_names)
 
 
 def get_viewsets():
@@ -54,12 +71,15 @@ class ModelToDrf:
 
     @staticmethod
     def get_serializer(model_class):
-
+        fields_name = ['url'] + [
+            field.name
+            for field in model_class._meta.get_fields()
+        ]
         class Serializer(serializers.ModelSerializer):
 
             class Meta:
                 model = model_class
-                fields = "__all__"
+                fields = fields_name
 
         return Serializer
 
