@@ -1,6 +1,6 @@
 from rest_framework import routers
 
-from .utils import get_viewsets
+from .views import get_viewsets
 
 router = routers.SimpleRouter()
 viewsets = get_viewsets()
