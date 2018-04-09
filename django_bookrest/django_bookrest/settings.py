@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "django_filters",
     "bookrest",
 ]
 
@@ -93,7 +92,7 @@ DATABASES = {
     },
     "bookrest": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "data/us_births.sqlite3"),
+        "NAME": os.path.join(BASE_DIR, "data/sample.sqlite3"),
     },
 }
 
