@@ -1,13 +1,32 @@
 from django.db import connections, models
 
+from rest_framework import serializers
+
 from collections import OrderedDict
 import re
+
+
+class ModelToSerializer:
+    def __init__(self, models):
+        self.models = models
+
+    def get_serializers(self):
+        return [self.get_serializer(model_class)
+            for model_class in self.models]
+
+
+    def get_serializer(self, model_class):
+        class Serializer(serializers.ModelSerializer):
+            class Meta:
+                model = model_class
+                fields = '__all__'
+        return Serializer
 
 
 class ConnectionToModels:
     """
     Given a connection,
-    Reurn a list of Django tables
+    Reurn a list of Django models
     """
 
     def __init__(self, connection):
