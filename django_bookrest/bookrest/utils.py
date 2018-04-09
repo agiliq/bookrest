@@ -9,6 +9,14 @@ import re
 BOOKREST_DB_NAME = 'bookrest'
 
 
+def get_viewsets():
+    models = ConnectionToModels(connections[BOOKREST_DB_NAME]).get_models()
+    viewsets = ModelToDrf(models).get_viewsets()
+    return zip(
+        [model._meta.db_table for model in models], viewsets
+    )
+
+
 class ModelToDrf:
     def __init__(self, models):
         self.models = models
@@ -86,7 +94,8 @@ class ConnectionToModels:
         get a list of fields in a table
         """
         with self.connection.cursor() as cursor:
-            return self.connection.introspection.get_table_description(cursor, table_name)
+            all_fields = self.connection.introspection.get_table_description(cursor, table_name)
+            return [field for field in all_fields if not field.name=='id']
 
     def get_field(self, table_name, field_info):
         """
