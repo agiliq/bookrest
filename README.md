@@ -56,9 +56,20 @@ urlpatterns = [
 ### Todo
 
 - [X] Test with Sqlite
-- [ ] Publish on Pypi
+- [X] Publish on Pypi
 - [ ] Test with Postgres
 - [ ] Test with Mysql
 - [ ] Add setting to enable a read only API
 - [ ] Enable circleci
 - [ ] Silently drop tables with no PKs rather than failing (bad idea??)
+
+
+#### Inspired by
+
+This projects was inspired by [datasette](https://github.com/simonw/datasette). I loved datasette, but because DRF has a geat browsable API and Django has powerful introspection capabilities, I wanted to do it in Django+DRF.
+
+Bookrest gets all the power of DRF - browsable API, coreapi, filtering, pagination. Set a `REST_FRAMEWORK` setting in your `settings.py` and `bookrest` will apply it.
+
+#### Whats with the name?
+
+You can put the `bookrest` on table, and it makes reading simpler.
