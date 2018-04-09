@@ -1,9 +1,12 @@
 from django.db import connections, models
+from django.db.models import query
 
 from rest_framework import serializers, viewsets
+from rest_framework.filters import SearchFilter
 
 from collections import OrderedDict
 import re
+import functools
 
 
 BOOKREST_DB_NAME = 'bookrest'
@@ -35,11 +38,20 @@ class ModelToDrf:
 
     @staticmethod
     def get_viewset(model_class, serializer_klass):
-        class ViewSet(viewsets.ReadOnlyModelViewSet):
+        searchable_field_name = [field.name for field in model_class._meta.get_fields()
+                if ModelToDrf.is_textual_field(field)]
+        class ViewSet(viewsets.ModelViewSet):
             serializer_class = serializer_klass
-            queryset = model_class.objects.using(BOOKREST_DB_NAME).all()
+            queryset = model_class.objects.all()
+            filter_backends = (SearchFilter,)
+            search_fields = searchable_field_name
+        return  type('{}ViewSet'.format(model_class._meta), (ViewSet,), {})
 
-        return ViewSet
+
+    @staticmethod
+    def is_textual_field(field):
+        return isinstance(field, models.TextField)
+
 
     @staticmethod
     def get_serializer(model_class):
@@ -76,8 +88,15 @@ class ConnectionToModels:
         model_fields = [self.get_field(table_name, field_info)
             for field_info in table_fields]
         attrs = dict(model_fields)
+
+        class BookRestQueryset(query.QuerySet):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._db = BOOKREST_DB_NAME
+
         attrs['__module__'] = 'bookrest.models'
         attrs ['Meta'] = Meta
+        attrs['objects'] = BookRestQueryset.as_manager()
         Model = type(self.table2model(table_name), (models.Model,), attrs)
         return Model
 
@@ -89,6 +108,8 @@ class ConnectionToModels:
             table_info = self.connection.introspection.get_table_list(cursor)
         return table_info
 
+
+    @functools.lru_cache(maxsize=32)
     def get_fields(self, table_name):
         """
         get a list of fields in a table
@@ -105,6 +126,9 @@ class ConnectionToModels:
         """
         field_params = OrderedDict()
         field_notes = []
+
+        with self.connection.cursor() as cursor:
+            primary_key_column = self.connection.introspection.get_primary_key_column(cursor, table_name)
 
         try:
             field_type = self.connection.introspection.get_field_type(field_info[1], field_info)
@@ -132,6 +156,8 @@ class ConnectionToModels:
             else:
                 field_params['max_digits'] = field_info[4]
                 field_params['decimal_places'] = field_info[5]
+        if field_info.name==primary_key_column:
+            field_params['primary_key'] = True
         return field_info.name, getattr(models, field_type)(**field_params)
 
     @staticmethod
