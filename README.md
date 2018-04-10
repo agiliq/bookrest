@@ -51,6 +51,8 @@ urlpatterns = [
 
 🚀 Boom! You are in business. All your tables will have a full read/write API
 
+Here is what it looks like with a DB with three tables.
+
 ![bookrest image](assets/bookrest.gif)
 
 ### Todo
@@ -66,7 +68,7 @@ urlpatterns = [
 
 #### Inspired by
 
-This projects was inspired by [datasette](https://github.com/simonw/datasette). I loved datasette, but because DRF has a geat browsable API and Django has powerful introspection capabilities, I wanted to do it in Django+DRF.
+This projects was inspired by [datasette](https://github.com/simonw/datasette). I loved datasette, but because DRF has a great browsable API and Django has powerful introspection capabilities, I wanted to do it in Django+DRF.
 
 Bookrest gets all the power of DRF - browsable API, coreapi, filtering, pagination. Set a `REST_FRAMEWORK` setting in your `settings.py` and `bookrest` will apply it.
 
