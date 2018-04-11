@@ -63,7 +63,7 @@ Here is what it looks like with a DB with three tables.
 - [ ] Test with Mysql
 - [ ] Add setting to enable a read only API
 - [ ] Enable circleci
-- [ ] Silently drop tables with no PKs rather than failing (bad idea??)
+- [ ] Silently disregard tables with no PKs rather than failing (bad idea??)
 
 
 #### Inspired by
