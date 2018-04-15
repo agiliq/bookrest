@@ -1,4 +1,4 @@
-### Bookrest - The easiest way to add rest API to an arbitrary DB
+### Bookrest - The easiest way to add a REST API to an arbitrary database
 
 
 ![bookrest image](assets/bookrest.jpg)
@@ -74,4 +74,4 @@ Bookrest gets all the power of DRF - browsable API, coreapi, filtering, paginati
 
 #### Whats with the name?
 
-You can put the `bookrest` on table, and it makes reading simpler.
+You can put the `bookrest` on table, and it makes reading simple.
